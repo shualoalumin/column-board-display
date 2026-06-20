@@ -33,8 +33,8 @@ interface Props {
 type Popup = "pen" | "eraser" | "more" | null;
 
 const bar: React.CSSProperties = {
-  position: "absolute",
-  bottom: "max(14px, env(safe-area-inset-bottom))",
+  position: "fixed",
+  bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
   left: "50%",
   transform: "translateX(-50%)",
   display: "flex",
@@ -91,7 +91,7 @@ const popupCard: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: "12px",
-  zIndex: 51,
+  zIndex: 100,
 };
 
 const popupRow: React.CSSProperties = {
@@ -171,7 +171,7 @@ export const WriteToolbar: React.FC<Props> = ({
       {popup && (
         <div
           onPointerDown={() => setPopup(null)}
-          style={{ position: "fixed", inset: 0, zIndex: 49 }}
+          style={{ position: "fixed", inset: 0, zIndex: 48 }}
         />
       )}
 
