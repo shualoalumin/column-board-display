@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { TeacherCanvas } from "../components/TeacherCanvas";
-import { DisplayBoard } from "../components/DisplayBoard";
-import { Toolbar } from "../components/Toolbar";
+import { Toolbar, PEN_PALETTE } from "../components/Toolbar";
 import { DebugPanel } from "../components/DebugPanel";
 import { useBoardState } from "../board/useBoardState";
 import { InputMode, Stroke, createDefaultBoardState } from "../board/boardTypes";
@@ -12,6 +11,17 @@ import {
   loadTeacherStateFromLocalStorage,
   saveTeacherStateToLocalStorage,
 } from "../realtime/boardEvents";
+
+const linkBtn: React.CSSProperties = {
+  padding: "5px 10px",
+  borderRadius: "6px",
+  border: "1px solid #333b48",
+  background: "#1c232e",
+  color: "#cbd5e1",
+  fontSize: "12px",
+  cursor: "pointer",
+  fontFamily: "system-ui, sans-serif",
+};
 
 export const WritePage: React.FC = () => {
   const { roomId = "local" } = useParams<{ roomId: string }>();
@@ -33,6 +43,7 @@ export const WritePage: React.FC = () => {
   } = useBoardState(savedState?.boardState ?? createDefaultBoardState());
 
   const [currentTool, setCurrentTool] = useState<"pen" | "eraser">("pen");
+  const [currentColor, setCurrentColor] = useState<string>(PEN_PALETTE[0]);
   const [inputMode, setInputMode] = useState<InputMode>("auto");
   const [showDebug, setShowDebug] = useState(false);
   const [debugInfo, setDebugInfo] = useState<Record<string, unknown>>({});
@@ -85,6 +96,8 @@ export const WritePage: React.FC = () => {
       <Toolbar
         currentTool={currentTool}
         onToolChange={setCurrentTool}
+        currentColor={currentColor}
+        onColorChange={setCurrentColor}
         inputMode={inputMode}
         onInputModeChange={setInputMode}
         onUndo={handleUndo}
@@ -96,44 +109,75 @@ export const WritePage: React.FC = () => {
         onRemoveColumn={handleRemoveColumn}
         columnCount={boardState.columns.length}
         activeColumnIndex={activeColIdx}
-        roomId={roomId}
-        connectionStatus={supabaseConfigured ? connectionStatus : "local-only"}
-        onCopyDisplayLink={() => copyLink(`/display/${roomId}`)}
-        onCopyViewerLink={() => copyLink(`/viewer/${roomId}`)}
       />
-      {restoredNotice && (
-        <div style={{ background: "#1d4ed8", color: "#fff", padding: "4px 12px", fontSize: "12px", fontFamily: "monospace", flexShrink: 0 }}>
-          Restored local room state.
-        </div>
-      )}
-      {!supabaseConfigured && (
-        <div style={{ background: "#7c2d12", color: "#fca5a5", padding: "3px 12px", fontSize: "11px", fontFamily: "monospace", flexShrink: 0 }}>
-          Supabase not configured — running local-only. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for realtime.
-        </div>
-      )}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden", gap: "8px", padding: "8px", minHeight: 0 }}>
-        <div style={{ flex: "0 0 auto", width: "min(45%, 360px)", height: "100%" }}>
-          <TeacherCanvas
-            boardState={boardState}
-            onStrokeCommitted={onStrokeCommitted}
-            inputMode={inputMode}
-            onInputModeChange={setInputMode}
-            currentTool={currentTool}
-            currentColor="#1a1a1a"
-            currentWidth={8}
-            showDebug={showDebug}
-            onDebugInfo={(info) =>
-              setDebugInfo({
-                ...info,
-                activeColumnId: boardState.activeColumnId,
-                columnCount: boardState.columns.length,
-              })
-            }
-          />
-        </div>
-        <div style={{ flex: 1, height: "100%", minWidth: 0 }}>
-          <DisplayBoard boardState={boardState} showActiveHighlight />
-        </div>
+
+      {/* Status / room link bar */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "10px",
+          padding: "6px 10px",
+          background: "#10151d",
+          borderBottom: "1px solid #232b38",
+          fontFamily: "system-ui, sans-serif",
+          fontSize: "12px",
+          flexShrink: 0,
+        }}
+      >
+        {restoredNotice && (
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: "6px",
+              background: "#064e3b",
+              color: "#6ee7b7",
+              fontWeight: 600,
+            }}
+          >
+            ↻ Restored local state
+          </span>
+        )}
+        <span
+          style={{
+            color: !supabaseConfigured ? "#94a3b8"
+              : connectionStatus === "connected" ? "#4ade80"
+              : "#f87171",
+            fontWeight: 600,
+          }}
+        >
+          ● {supabaseConfigured ? connectionStatus : "local-only"}
+        </span>
+        <span style={{ color: "#64748b", fontFamily: "monospace" }}>
+          Room {roomId.slice(0, 8)}…
+        </span>
+        <button style={linkBtn} onClick={() => copyLink(`/display/${roomId}`)}>
+          📺 Copy display link
+        </button>
+        <button style={linkBtn} onClick={() => copyLink(`/viewer/${roomId}`)}>
+          👁 Copy viewer link
+        </button>
+      </div>
+
+      <div style={{ flex: 1, overflow: "hidden", padding: "12px", minHeight: 0 }}>
+        <TeacherCanvas
+          boardState={boardState}
+          onStrokeCommitted={onStrokeCommitted}
+          inputMode={inputMode}
+          onInputModeChange={setInputMode}
+          currentTool={currentTool}
+          currentColor={currentColor}
+          currentWidth={8}
+          showDebug={showDebug}
+          onDebugInfo={(info) =>
+            setDebugInfo({
+              ...info,
+              activeColumnId: boardState.activeColumnId,
+              columnCount: boardState.columns.length,
+            })
+          }
+        />
       </div>
       <button
         onClick={() => setShowDebug((v) => !v)}

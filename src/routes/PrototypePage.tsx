@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { TeacherCanvas } from "../components/TeacherCanvas";
 import { DisplayBoard } from "../components/DisplayBoard";
-import { Toolbar } from "../components/Toolbar";
+import { Toolbar, PEN_PALETTE } from "../components/Toolbar";
 import { DebugPanel } from "../components/DebugPanel";
 import { useBoardState } from "../board/useBoardState";
 import { InputMode, Stroke } from "../board/boardTypes";
@@ -20,6 +20,7 @@ export const PrototypePage: React.FC = () => {
   } = useBoardState();
 
   const [currentTool, setCurrentTool] = useState<"pen" | "eraser">("pen");
+  const [currentColor, setCurrentColor] = useState<string>(PEN_PALETTE[0]);
   const [inputMode, setInputMode] = useState<InputMode>("auto");
   const [showDebug, setShowDebug] = useState(false);
   const [debugInfo, setDebugInfo] = useState<Record<string, unknown>>({});
@@ -47,6 +48,8 @@ export const PrototypePage: React.FC = () => {
       <Toolbar
         currentTool={currentTool}
         onToolChange={setCurrentTool}
+        currentColor={currentColor}
+        onColorChange={setCurrentColor}
         inputMode={inputMode}
         onInputModeChange={setInputMode}
         onUndo={undo}
@@ -76,7 +79,7 @@ export const PrototypePage: React.FC = () => {
             inputMode={inputMode}
             onInputModeChange={setInputMode}
             currentTool={currentTool}
-            currentColor="#1a1a1a"
+            currentColor={currentColor}
             currentWidth={8}
             showDebug={showDebug}
             onDebugInfo={(info) =>

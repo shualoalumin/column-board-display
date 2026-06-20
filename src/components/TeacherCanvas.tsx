@@ -66,7 +66,10 @@ export const TeacherCanvas: React.FC<Props> = ({
     inputManagerRef.current.setMode(inputMode);
   }, [inputMode]);
 
-  const activeColumn = boardState.columns.find((c) => c.id === boardState.activeColumnId);
+  const activeColumnIndex = boardState.columns.findIndex(
+    (c) => c.id === boardState.activeColumnId
+  );
+  const activeColumn = boardState.columns[activeColumnIndex];
 
   const applyLayout = useCallback((layout: ReturnType<typeof calculateTeacherCanvasLayout>) => {
     [bgCanvasRef.current, strokeCanvasRef.current].forEach((c) => {
@@ -269,6 +272,27 @@ export const TeacherCanvas: React.FC<Props> = ({
     >
       <canvas ref={bgCanvasRef} style={{ position: "absolute", touchAction: "none" }} />
       <canvas ref={strokeCanvasRef} style={{ position: "absolute", touchAction: "none" }} />
+      {/* Active-column badge. Overlay layer (HTML, not canvas) per layered design. */}
+      <div
+        style={{
+          position: "absolute",
+          top: `${layoutRef.current.offsetY + 8}px`,
+          right: `${layoutRef.current.offsetX + 8}px`,
+          padding: "5px 10px",
+          background: "#1e293b",
+          border: "1px solid #334155",
+          borderRadius: "6px",
+          color: "#7dd3fc",
+          fontSize: "11px",
+          fontWeight: 700,
+          fontFamily: "system-ui, sans-serif",
+          letterSpacing: "0.05em",
+          pointerEvents: "none",
+          whiteSpace: "nowrap",
+        }}
+      >
+        WRITING IN COLUMN {activeColumnIndex + 1}
+      </div>
     </div>
   );
 };
