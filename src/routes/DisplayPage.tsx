@@ -30,7 +30,7 @@ export const DisplayPage: React.FC = () => {
     : "#f87171";
 
   return (
-    <div style={{ width: "100vw", height: "100vh", background: "#1a1a1a", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div style={{ width: "100dvw", height: "100dvh", background: "#1a1a1a", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{
         padding: "4px 12px",
         background: "#111",

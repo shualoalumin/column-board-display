@@ -26,7 +26,7 @@ export const ViewerPage: React.FC = () => {
   const statusColor = status === "connected" ? "#4ade80" : "#fbbf24";
 
   return (
-    <div style={{ width: "100vw", height: "100vh", background: "#111", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div style={{ width: "100dvw", height: "100dvh", background: "#111", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{
         padding: "3px 10px",
         background: "#0a0a0a",

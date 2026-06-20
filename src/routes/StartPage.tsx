@@ -15,7 +15,7 @@ export const StartPage: React.FC = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        height: "100vh",
+        height: "100dvh",
         background:
           "radial-gradient(120% 120% at 50% 0%, #1b2230 0%, #0d1016 60%, #0a0c10 100%)",
         color: "#eee",

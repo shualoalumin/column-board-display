@@ -40,8 +40,8 @@ export const PrototypePage: React.FC = () => {
       style={{
         display: "flex",
         flexDirection: "column",
-        width: "100vw",
-        height: "100vh",
+        width: "100dvw",
+        height: "100dvh",
         background: "#111",
         overflow: "hidden",
       }}
