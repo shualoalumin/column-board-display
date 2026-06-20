@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { InputMode } from "../board/boardTypes";
-import { PEN_PALETTE, PEN_WIDTHS, ERASER_WIDTHS } from "./penConstants";
+import { PEN_PALETTE, PEN_WIDTHS, ERASER_WIDTHS, EraserMode } from "./penConstants";
 
 interface Props {
   currentTool: "pen" | "eraser";
@@ -11,6 +11,8 @@ interface Props {
   onWidthChange: (width: number) => void;
   currentEraserWidth: number;
   onEraserWidthChange: (width: number) => void;
+  eraserMode: EraserMode;
+  onEraserModeChange: (mode: EraserMode) => void;
   inputMode: InputMode;
   onInputModeChange: (mode: InputMode) => void;
   onUndo: () => void;
@@ -124,6 +126,8 @@ export const WriteToolbar: React.FC<Props> = ({
   onWidthChange,
   currentEraserWidth,
   onEraserWidthChange,
+  eraserMode,
+  onEraserModeChange,
   inputMode,
   onInputModeChange,
   onUndo,
@@ -271,6 +275,32 @@ export const WriteToolbar: React.FC<Props> = ({
                         background: "transparent",
                       }}
                     />
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: "6px" }}>
+              {(["area", "stroke"] as EraserMode[]).map((m) => {
+                const selected = eraserMode === m;
+                return (
+                  <button
+                    key={m}
+                    onClick={() => onEraserModeChange(m)}
+                    style={{
+                      flex: 1,
+                      padding: "8px 10px",
+                      borderRadius: "9px",
+                      border: "none",
+                      background: selected ? "#3b82f6" : "#3a3a3c",
+                      color: selected ? "#fff" : "#cbd5e1",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      fontFamily: "system-ui, sans-serif",
+                      cursor: "pointer",
+                      touchAction: "manipulation",
+                    }}
+                  >
+                    {m === "area" ? "Area" : "Stroke"}
                   </button>
                 );
               })}

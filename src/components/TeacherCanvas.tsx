@@ -11,7 +11,11 @@ import { setupCanvasDpi } from "../canvas/setupCanvasDpi";
 import { drawBackground } from "../canvas/backgroundRenderUtils";
 import { renderStrokesOnCanvas, appendStrokeSegment } from "../canvas/strokeRenderUtils";
 import { calculateTeacherCanvasLayout } from "../geometry/columnLayout";
+import { strokeHitsPoint } from "../geometry/strokeHitTest";
 import { InputManager } from "../input/InputManager";
+import type { EraserMode } from "./penConstants";
+
+export type { EraserMode };
 
 export interface TeacherDebugInfo {
   pointerType: string;
@@ -40,6 +44,8 @@ interface Props {
   currentColor: string;
   currentWidth: number;
   currentEraserWidth: number;
+  eraserMode?: EraserMode;
+  onStrokesErased?: (columnId: string, strokeIds: string[]) => void;
   showDebug?: boolean;
   onDebugInfo?: (info: TeacherDebugInfo) => void;
 }
@@ -55,10 +61,16 @@ export const TeacherCanvas: React.FC<Props> = ({
   currentColor,
   currentWidth,
   currentEraserWidth,
+  eraserMode = "area",
+  onStrokesErased,
   onDebugInfo,
 }) => {
   // Track if barrel button auto-switched to eraser so we can restore
   const barrelEraserActive = useRef(false);
+  // Stroke-eraser gesture state
+  const strokeErasingRef = useRef(false);
+  const erasedIdsRef = useRef<Set<string>>(new Set());
+  const activeStrokesRef = useRef<Stroke[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const strokeCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,6 +88,26 @@ export const TeacherCanvas: React.FC<Props> = ({
     (c) => c.id === boardState.activeColumnId
   );
   const activeColumn = boardState.columns[activeColumnIndex];
+  activeStrokesRef.current = activeColumn?.strokes ?? [];
+
+  const eraseAt = useCallback(
+    (lx: number, ly: number) => {
+      if (!onStrokesErased) return;
+      const radius = currentEraserWidth / 2;
+      const hits: string[] = [];
+      for (const s of activeStrokesRef.current) {
+        if (erasedIdsRef.current.has(s.id)) continue;
+        if (strokeHitsPoint(s, lx, ly, radius)) {
+          erasedIdsRef.current.add(s.id);
+          hits.push(s.id);
+        }
+      }
+      if (hits.length > 0) {
+        onStrokesErased(boardState.activeColumnId, hits);
+      }
+    },
+    [currentEraserWidth, onStrokesErased, boardState.activeColumnId]
+  );
 
   const applyLayout = useCallback((layout: ReturnType<typeof calculateTeacherCanvasLayout>) => {
     [bgCanvasRef.current, strokeCanvasRef.current].forEach((c) => {
@@ -154,6 +186,16 @@ export const TeacherCanvas: React.FC<Props> = ({
       const point: Point = { x: logical.x, y: logical.y, pressure: e.pressure, timestamp: Date.now() };
 
       const effectiveTool = penEraseButton ? "eraser" : currentTool;
+
+      // Stroke-eraser: remove whole strokes on contact instead of drawing.
+      if (effectiveTool === "eraser" && eraserMode === "stroke") {
+        strokeErasingRef.current = true;
+        erasedIdsRef.current = new Set();
+        activeStrokeRef.current = null;
+        eraseAt(logical.x, logical.y);
+        return;
+      }
+
       const effectiveWidth = effectiveTool === "eraser" ? currentEraserWidth : currentWidth;
       activeStrokeRef.current = {
         id: crypto.randomUUID(),
@@ -182,13 +224,24 @@ export const TeacherCanvas: React.FC<Props> = ({
         pointCount: 1,
       });
     },
-    [boardState.activeColumnId, currentTool, onToolChange, currentColor, currentWidth, currentEraserWidth, onDebugInfo, toLogical]
+    [boardState.activeColumnId, currentTool, onToolChange, currentColor, currentWidth, currentEraserWidth, eraserMode, eraseAt, onDebugInfo, toLogical]
   );
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       const im = inputManagerRef.current;
       if (!im.isActive(e.nativeEvent)) return;
+
+      // Stroke-eraser gesture: hit-test each point, no drawing.
+      if (strokeErasingRef.current) {
+        const moveEvents = (e.nativeEvent as PointerEvent).getCoalescedEvents?.() ?? [e.nativeEvent];
+        for (const ev of moveEvents) {
+          const logical = toLogical(ev.clientX, ev.clientY);
+          eraseAt(logical.x, logical.y);
+        }
+        return;
+      }
+
       const stroke = activeStrokeRef.current;
       if (!stroke) return;
 
@@ -233,7 +286,7 @@ export const TeacherCanvas: React.FC<Props> = ({
         });
       }
     },
-    [onDebugInfo, toLogical]
+    [eraseAt, onDebugInfo, toLogical]
   );
 
   const commitStroke = useCallback(() => {
@@ -242,6 +295,7 @@ export const TeacherCanvas: React.FC<Props> = ({
       onStrokeCommitted(stroke);
     }
     activeStrokeRef.current = null;
+    strokeErasingRef.current = false;
     inputManagerRef.current.release();
     // Restore pen if barrel button auto-switched to eraser
     if (barrelEraserActive.current && onToolChange) {

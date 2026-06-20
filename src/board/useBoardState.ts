@@ -8,6 +8,7 @@ import * as actions from "./boardActions";
 
 type BoardReducerAction =
   | { type: "ADD_STROKE"; stroke: Stroke }
+  | { type: "ERASE_STROKES"; columnId: string; strokeIds: string[] }
   | { type: "UNDO" }
   | { type: "CLEAR_ACTIVE_COLUMN" }
   | { type: "CLEAR_WHOLE_BOARD" }
@@ -20,6 +21,7 @@ type BoardReducerAction =
 function boardReducer(state: BoardState, action: BoardReducerAction): BoardState {
   switch (action.type) {
     case "ADD_STROKE": return actions.addStroke(state, action.stroke);
+    case "ERASE_STROKES": return actions.eraseStrokes(state, action.columnId, action.strokeIds);
     case "UNDO": return actions.undoLastStroke(state);
     case "CLEAR_ACTIVE_COLUMN": return actions.clearActiveColumn(state);
     case "CLEAR_WHOLE_BOARD": return actions.clearWholeBoard(state);
@@ -40,6 +42,8 @@ export function useBoardState(initialState?: BoardState) {
 
   const addStroke = useCallback((stroke: Stroke) =>
     dispatch({ type: "ADD_STROKE", stroke }), []);
+  const eraseStrokes = useCallback((columnId: string, strokeIds: string[]) =>
+    dispatch({ type: "ERASE_STROKES", columnId, strokeIds }), []);
   const undo = useCallback(() => dispatch({ type: "UNDO" }), []);
   const clearActiveColumn = useCallback(() => dispatch({ type: "CLEAR_ACTIVE_COLUMN" }), []);
   const clearWholeBoard = useCallback(() => dispatch({ type: "CLEAR_WHOLE_BOARD" }), []);
@@ -53,6 +57,7 @@ export function useBoardState(initialState?: BoardState) {
   return {
     boardState,
     addStroke,
+    eraseStrokes,
     undo,
     clearActiveColumn,
     clearWholeBoard,

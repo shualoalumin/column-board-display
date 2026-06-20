@@ -39,6 +39,7 @@ export function createBoardEvent(
 // Board-mutating event types. Only teacher can send these.
 export const BOARD_MUTATING_TYPES: NetworkEventType[] = [
   "strokeCommitted",
+  "eraseStrokes",
   "undo",
   "clearActiveColumn",
   "clearWholeBoard",

@@ -18,3 +18,6 @@ export type PenWidth = (typeof PEN_WIDTHS)[number];
 // Eraser sizes are in logical units (same space as stroke width).
 export const ERASER_WIDTHS = [20, 40, 80, 140] as const;
 export type EraserWidth = (typeof ERASER_WIDTHS)[number];
+
+// "area" = pixel/disc erase (destination-out); "stroke" = erase whole strokes.
+export type EraserMode = "area" | "stroke";

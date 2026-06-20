@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { TeacherCanvas } from "../components/TeacherCanvas";
 import { WriteToolbar } from "../components/WriteToolbar";
-import { PEN_PALETTE, PEN_WIDTHS, ERASER_WIDTHS } from "../components/penConstants";
+import { PEN_PALETTE, PEN_WIDTHS, ERASER_WIDTHS, EraserMode } from "../components/penConstants";
 import { useBoardState } from "../board/useBoardState";
 import { InputMode, Stroke, createDefaultBoardState } from "../board/boardTypes";
 import { supabaseConfigured } from "../realtime/supabaseClient";
@@ -22,6 +22,7 @@ export const WritePage: React.FC = () => {
   const {
     boardState,
     addStroke,
+    eraseStrokes,
     undo,
     clearActiveColumn,
     clearWholeBoard,
@@ -35,6 +36,7 @@ export const WritePage: React.FC = () => {
   const [currentColor, setCurrentColor] = useState<string>(PEN_PALETTE[0]);
   const [currentWidth, setCurrentWidth] = useState<number>(PEN_WIDTHS[1]);
   const [currentEraserWidth, setCurrentEraserWidth] = useState<number>(ERASER_WIDTHS[1]);
+  const [eraserMode, setEraserMode] = useState<EraserMode>("area");
   const [inputMode, setInputMode] = useState<InputMode>("auto");
   const seqRef = useRef(savedState?.seq ?? 0);
 
@@ -65,6 +67,14 @@ export const WritePage: React.FC = () => {
       sendEvent("strokeCommitted", { stroke });
     },
     [addStroke, sendEvent]
+  );
+
+  const handleStrokesErased = useCallback(
+    (columnId: string, strokeIds: string[]) => {
+      eraseStrokes(columnId, strokeIds);
+      sendEvent("eraseStrokes", { columnId, strokeIds });
+    },
+    [eraseStrokes, sendEvent]
   );
 
   const handleUndo = useCallback(() => { undo(); sendEvent("undo", {}); }, [undo, sendEvent]);
@@ -112,6 +122,8 @@ export const WritePage: React.FC = () => {
           currentColor={currentColor}
           currentWidth={currentWidth}
           currentEraserWidth={currentEraserWidth}
+          eraserMode={eraserMode}
+          onStrokesErased={handleStrokesErased}
         />
       </div>
 
@@ -167,6 +179,8 @@ export const WritePage: React.FC = () => {
         onWidthChange={setCurrentWidth}
         currentEraserWidth={currentEraserWidth}
         onEraserWidthChange={setCurrentEraserWidth}
+        eraserMode={eraserMode}
+        onEraserModeChange={setEraserMode}
         inputMode={inputMode}
         onInputModeChange={setInputMode}
         onUndo={handleUndo}

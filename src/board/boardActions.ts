@@ -11,6 +11,23 @@ export function addStroke(state: BoardState, stroke: Stroke): BoardState {
   };
 }
 
+export function eraseStrokes(
+  state: BoardState,
+  columnId: string,
+  strokeIds: string[]
+): BoardState {
+  if (strokeIds.length === 0) return state;
+  const idSet = new Set(strokeIds);
+  return {
+    ...state,
+    columns: state.columns.map((col) =>
+      col.id === columnId
+        ? { ...col, strokes: col.strokes.filter((s) => !idSet.has(s.id)) }
+        : col
+    ),
+  };
+}
+
 export function undoLastStroke(state: BoardState): BoardState {
   const activeCol = state.columns.find((c) => c.id === state.activeColumnId);
   if (!activeCol || activeCol.strokes.length === 0) return state;
@@ -93,6 +110,16 @@ export function applyBoardEvent(
         state.columns.some((c) => c.id === stroke.columnId)
       ) {
         newState = addStroke(state, stroke);
+      }
+      break;
+    }
+    case "eraseStrokes": {
+      const { columnId, strokeIds } = event.payload as {
+        columnId: string;
+        strokeIds: string[];
+      };
+      if (columnId && Array.isArray(strokeIds)) {
+        newState = eraseStrokes(state, columnId, strokeIds);
       }
       break;
     }
