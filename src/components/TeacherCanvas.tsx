@@ -293,22 +293,23 @@ export const TeacherCanvas: React.FC<Props> = ({
       <div
         style={{
           position: "absolute",
-          top: `${layoutRef.current.offsetY + 8}px`,
-          right: `${layoutRef.current.offsetX + 8}px`,
-          padding: "5px 10px",
-          background: "#1e293b",
-          border: "1px solid #334155",
-          borderRadius: "6px",
-          color: "#7dd3fc",
+          top: `${layoutRef.current.offsetY + 10}px`,
+          left: "50%",
+          transform: "translateX(-50%)",
+          padding: "4px 12px",
+          background: "rgba(28,28,30,0.7)",
+          border: "1px solid #3a3a3c",
+          borderRadius: "999px",
+          color: "#9ca3af",
           fontSize: "11px",
-          fontWeight: 700,
+          fontWeight: 600,
           fontFamily: "system-ui, sans-serif",
-          letterSpacing: "0.05em",
+          letterSpacing: "0.04em",
           pointerEvents: "none",
           whiteSpace: "nowrap",
         }}
       >
-        WRITING IN COLUMN {activeColumnIndex + 1}
+        COLUMN {activeColumnIndex + 1}
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { TeacherCanvas } from "../components/TeacherCanvas";
-import { Toolbar, PEN_PALETTE, PEN_WIDTHS } from "../components/Toolbar";
-import { DebugPanel } from "../components/DebugPanel";
+import { WriteToolbar } from "../components/WriteToolbar";
+import { PEN_PALETTE, PEN_WIDTHS } from "../components/penConstants";
 import { useBoardState } from "../board/useBoardState";
 import { InputMode, Stroke, createDefaultBoardState } from "../board/boardTypes";
 import { supabaseConfigured } from "../realtime/supabaseClient";
@@ -11,17 +11,6 @@ import {
   loadTeacherStateFromLocalStorage,
   saveTeacherStateToLocalStorage,
 } from "../realtime/boardEvents";
-
-const linkBtn: React.CSSProperties = {
-  padding: "5px 10px",
-  borderRadius: "6px",
-  border: "1px solid #333b48",
-  background: "#1c232e",
-  color: "#cbd5e1",
-  fontSize: "12px",
-  cursor: "pointer",
-  fontFamily: "system-ui, sans-serif",
-};
 
 export const WritePage: React.FC = () => {
   const { roomId = "local" } = useParams<{ roomId: string }>();
@@ -46,8 +35,6 @@ export const WritePage: React.FC = () => {
   const [currentColor, setCurrentColor] = useState<string>(PEN_PALETTE[0]);
   const [currentWidth, setCurrentWidth] = useState<number>(PEN_WIDTHS[1]);
   const [inputMode, setInputMode] = useState<InputMode>("auto");
-  const [showDebug, setShowDebug] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<Record<string, unknown>>({});
   const seqRef = useRef(savedState?.seq ?? 0);
 
   const { connectionStatus, sendEvent } = useBoardRealtime({
@@ -92,9 +79,84 @@ export const WritePage: React.FC = () => {
     navigator.clipboard.writeText(url).catch(() => prompt("Copy this link:", url));
   };
 
+  const connectionLabel = !supabaseConfigured
+    ? "local-only"
+    : connectionStatus;
+  const connectionColor = !supabaseConfigured
+    ? "#94a3b8"
+    : connectionStatus === "connected"
+    ? "#4ade80"
+    : "#f87171";
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100vw", height: "100vh", background: "#111", overflow: "hidden" }}>
-      <Toolbar
+    <div
+      style={{
+        position: "relative",
+        width: "100vw",
+        height: "100vh",
+        background: "#1c1c1e",
+        overflow: "hidden",
+        touchAction: "none",
+      }}
+    >
+      {/* Edge-to-edge canvas */}
+      <div style={{ position: "absolute", inset: 0 }}>
+        <TeacherCanvas
+          boardState={boardState}
+          onStrokeCommitted={onStrokeCommitted}
+          inputMode={inputMode}
+          onInputModeChange={setInputMode}
+          currentTool={currentTool}
+          onToolChange={setCurrentTool}
+          currentColor={currentColor}
+          currentWidth={currentWidth}
+        />
+      </div>
+
+      {/* Tiny status dot, top-right */}
+      <div
+        style={{
+          position: "absolute",
+          top: "max(10px, env(safe-area-inset-top))",
+          right: "12px",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "4px 9px",
+          borderRadius: "999px",
+          background: "rgba(28,28,30,0.7)",
+          border: "1px solid #3a3a3c",
+          color: connectionColor,
+          fontSize: "11px",
+          fontFamily: "system-ui, sans-serif",
+          fontWeight: 600,
+          pointerEvents: "none",
+        }}
+      >
+        ● {connectionLabel}
+      </div>
+
+      {restoredNotice && (
+        <div
+          style={{
+            position: "absolute",
+            top: "max(10px, env(safe-area-inset-top))",
+            left: "12px",
+            padding: "4px 10px",
+            borderRadius: "999px",
+            background: "#064e3b",
+            color: "#6ee7b7",
+            fontSize: "11px",
+            fontWeight: 600,
+            fontFamily: "system-ui, sans-serif",
+            pointerEvents: "none",
+          }}
+        >
+          ↻ Restored
+        </div>
+      )}
+
+      <WriteToolbar
         currentTool={currentTool}
         onToolChange={setCurrentTool}
         currentColor={currentColor}
@@ -112,89 +174,11 @@ export const WritePage: React.FC = () => {
         onRemoveColumn={handleRemoveColumn}
         columnCount={boardState.columns.length}
         activeColumnIndex={activeColIdx}
+        connectionLabel={connectionLabel}
+        connectionColor={connectionColor}
+        onCopyDisplay={() => copyLink(`/display/${roomId}`)}
+        onCopyViewer={() => copyLink(`/viewer/${roomId}`)}
       />
-
-      {/* Status / room link bar */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: "10px",
-          padding: "6px 10px",
-          background: "#10151d",
-          borderBottom: "1px solid #232b38",
-          fontFamily: "system-ui, sans-serif",
-          fontSize: "12px",
-          flexShrink: 0,
-        }}
-      >
-        {restoredNotice && (
-          <span
-            style={{
-              padding: "3px 8px",
-              borderRadius: "6px",
-              background: "#064e3b",
-              color: "#6ee7b7",
-              fontWeight: 600,
-            }}
-          >
-            ↻ Restored local state
-          </span>
-        )}
-        <span
-          style={{
-            color: !supabaseConfigured ? "#94a3b8"
-              : connectionStatus === "connected" ? "#4ade80"
-              : "#f87171",
-            fontWeight: 600,
-          }}
-        >
-          ● {supabaseConfigured ? connectionStatus : "local-only"}
-        </span>
-        <span style={{ color: "#64748b", fontFamily: "monospace" }}>
-          Room {roomId.slice(0, 8)}…
-        </span>
-        <button style={linkBtn} onClick={() => copyLink(`/display/${roomId}`)}>
-          📺 Copy display link
-        </button>
-        <button style={linkBtn} onClick={() => copyLink(`/viewer/${roomId}`)}>
-          👁 Copy viewer link
-        </button>
-      </div>
-
-      <div style={{ flex: 1, overflow: "hidden", padding: "12px", minHeight: 0 }}>
-        <TeacherCanvas
-          boardState={boardState}
-          onStrokeCommitted={onStrokeCommitted}
-          inputMode={inputMode}
-          onInputModeChange={setInputMode}
-          currentTool={currentTool}
-          onToolChange={setCurrentTool}
-          currentColor={currentColor}
-          currentWidth={currentWidth}
-          showDebug={showDebug}
-          onDebugInfo={(info) =>
-            setDebugInfo({
-              ...info,
-              activeColumnId: boardState.activeColumnId,
-              columnCount: boardState.columns.length,
-            })
-          }
-        />
-      </div>
-      <button
-        onClick={() => setShowDebug((v) => !v)}
-        style={{
-          position: "fixed", bottom: 8, left: 8, padding: "4px 8px",
-          background: "#333", color: "#aaa", border: "1px solid #555",
-          borderRadius: "4px", fontSize: "11px", cursor: "pointer", zIndex: 10000,
-          fontFamily: "monospace",
-        }}
-      >
-        {showDebug ? "Hide Debug" : "Debug"}
-      </button>
-      <DebugPanel info={debugInfo} visible={showDebug} />
     </div>
   );
 };

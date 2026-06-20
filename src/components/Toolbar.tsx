@@ -1,19 +1,9 @@
 import React from "react";
 import { InputMode } from "../board/boardTypes";
+import { PEN_PALETTE, PEN_WIDTHS } from "./penConstants";
 
-// Classroom-friendly palette. First entry (near-black) is the default ink.
-export const PEN_PALETTE = [
-  "#f0f0f0",
-  "#60a5fa",
-  "#f87171",
-  "#34d399",
-  "#fbbf24",
-  "#f97316",
-  "#c084fc",
-];
-
-export const PEN_WIDTHS = [4, 8, 14, 22] as const;
-export type PenWidth = (typeof PEN_WIDTHS)[number];
+export { PEN_PALETTE, PEN_WIDTHS } from "./penConstants";
+export type { PenWidth } from "./penConstants";
 
 interface Props {
   currentTool: "pen" | "eraser";
