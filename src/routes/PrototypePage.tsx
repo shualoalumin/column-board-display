@@ -85,6 +85,7 @@ export const PrototypePage: React.FC = () => {
             onToolChange={setCurrentTool}
             currentColor={currentColor}
             currentWidth={currentWidth}
+            currentEraserWidth={40}
             showDebug={showDebug}
             onDebugInfo={(info) =>
               setDebugInfo({

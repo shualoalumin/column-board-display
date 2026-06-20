@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { TeacherCanvas } from "../components/TeacherCanvas";
 import { WriteToolbar } from "../components/WriteToolbar";
-import { PEN_PALETTE, PEN_WIDTHS } from "../components/penConstants";
+import { PEN_PALETTE, PEN_WIDTHS, ERASER_WIDTHS } from "../components/penConstants";
 import { useBoardState } from "../board/useBoardState";
 import { InputMode, Stroke, createDefaultBoardState } from "../board/boardTypes";
 import { supabaseConfigured } from "../realtime/supabaseClient";
@@ -34,6 +34,7 @@ export const WritePage: React.FC = () => {
   const [currentTool, setCurrentTool] = useState<"pen" | "eraser">("pen");
   const [currentColor, setCurrentColor] = useState<string>(PEN_PALETTE[0]);
   const [currentWidth, setCurrentWidth] = useState<number>(PEN_WIDTHS[1]);
+  const [currentEraserWidth, setCurrentEraserWidth] = useState<number>(ERASER_WIDTHS[1]);
   const [inputMode, setInputMode] = useState<InputMode>("auto");
   const seqRef = useRef(savedState?.seq ?? 0);
 
@@ -110,6 +111,7 @@ export const WritePage: React.FC = () => {
           onToolChange={setCurrentTool}
           currentColor={currentColor}
           currentWidth={currentWidth}
+          currentEraserWidth={currentEraserWidth}
         />
       </div>
 
@@ -163,6 +165,8 @@ export const WritePage: React.FC = () => {
         onColorChange={setCurrentColor}
         currentWidth={currentWidth}
         onWidthChange={setCurrentWidth}
+        currentEraserWidth={currentEraserWidth}
+        onEraserWidthChange={setCurrentEraserWidth}
         inputMode={inputMode}
         onInputModeChange={setInputMode}
         onUndo={handleUndo}

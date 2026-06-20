@@ -39,6 +39,7 @@ interface Props {
   onToolChange?: (tool: "pen" | "eraser") => void;
   currentColor: string;
   currentWidth: number;
+  currentEraserWidth: number;
   showDebug?: boolean;
   onDebugInfo?: (info: TeacherDebugInfo) => void;
 }
@@ -53,6 +54,7 @@ export const TeacherCanvas: React.FC<Props> = ({
   onToolChange,
   currentColor,
   currentWidth,
+  currentEraserWidth,
   onDebugInfo,
 }) => {
   // Track if barrel button auto-switched to eraser so we can restore
@@ -139,9 +141,11 @@ export const TeacherCanvas: React.FC<Props> = ({
 
       canvas.setPointerCapture(e.pointerId);
 
-      // S Pen barrel button: button=5 or buttons & 32
-      const isBarrelButton = e.pointerType === "pen" && (e.button === 5 || (e.buttons & 32) !== 0);
-      if (isBarrelButton && currentTool !== "eraser" && onToolChange) {
+      // S Pen side (barrel) button = secondary button (buttons & 2).
+      // Eraser end of the pen flipped over = buttons & 32. Both → erase.
+      const penEraseButton =
+        e.pointerType === "pen" && ((e.buttons & 2) !== 0 || (e.buttons & 32) !== 0);
+      if (penEraseButton && currentTool !== "eraser" && onToolChange) {
         barrelEraserActive.current = true;
         onToolChange("eraser");
       }
@@ -149,13 +153,14 @@ export const TeacherCanvas: React.FC<Props> = ({
       const logical = toLogical(e.clientX, e.clientY);
       const point: Point = { x: logical.x, y: logical.y, pressure: e.pressure, timestamp: Date.now() };
 
-      const effectiveTool = isBarrelButton ? "eraser" : currentTool;
+      const effectiveTool = penEraseButton ? "eraser" : currentTool;
+      const effectiveWidth = effectiveTool === "eraser" ? currentEraserWidth : currentWidth;
       activeStrokeRef.current = {
         id: crypto.randomUUID(),
         columnId: boardState.activeColumnId,
         tool: effectiveTool,
         color: currentColor,
-        width: currentWidth,
+        width: effectiveWidth,
         points: [point],
       };
 
@@ -177,7 +182,7 @@ export const TeacherCanvas: React.FC<Props> = ({
         pointCount: 1,
       });
     },
-    [boardState.activeColumnId, currentTool, onToolChange, currentColor, currentWidth, onDebugInfo, toLogical]
+    [boardState.activeColumnId, currentTool, onToolChange, currentColor, currentWidth, currentEraserWidth, onDebugInfo, toLogical]
   );
 
   const onPointerMove = useCallback(
@@ -286,6 +291,7 @@ export const TeacherCanvas: React.FC<Props> = ({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
       onLostPointerCapture={onLostPointerCapture}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <canvas ref={bgCanvasRef} style={{ position: "absolute", touchAction: "none" }} />
       <canvas ref={strokeCanvasRef} style={{ position: "absolute", touchAction: "none" }} />

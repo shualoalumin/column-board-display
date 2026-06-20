@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { InputMode } from "../board/boardTypes";
-import { PEN_PALETTE, PEN_WIDTHS } from "./penConstants";
+import { PEN_PALETTE, PEN_WIDTHS, ERASER_WIDTHS } from "./penConstants";
 
 interface Props {
   currentTool: "pen" | "eraser";
@@ -9,6 +9,8 @@ interface Props {
   onColorChange: (color: string) => void;
   currentWidth: number;
   onWidthChange: (width: number) => void;
+  currentEraserWidth: number;
+  onEraserWidthChange: (width: number) => void;
   inputMode: InputMode;
   onInputModeChange: (mode: InputMode) => void;
   onUndo: () => void;
@@ -120,6 +122,8 @@ export const WriteToolbar: React.FC<Props> = ({
   onColorChange,
   currentWidth,
   onWidthChange,
+  currentEraserWidth,
+  onEraserWidthChange,
   inputMode,
   onInputModeChange,
   onUndo,
@@ -232,9 +236,46 @@ export const WriteToolbar: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Eraser popup: clear options */}
+        {/* Eraser popup: size + clear options */}
         {popup === "eraser" && (
           <div style={{ ...popupCard, left: 46 }}>
+            <div style={{ ...popupRow, justifyContent: "space-between" }}>
+              {ERASER_WIDTHS.map((w) => {
+                const selected = currentEraserWidth === w;
+                const dot = Math.round(10 + w * 0.18);
+                return (
+                  <button
+                    key={w}
+                    onClick={() => onEraserWidthChange(w)}
+                    aria-label={`Eraser ${w}`}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: "10px",
+                      background: selected ? "#3b82f6" : "#3a3a3c",
+                      border: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
+                      touchAction: "manipulation",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: dot,
+                        height: dot,
+                        borderRadius: "50%",
+                        border: `2px solid ${selected ? "#fff" : "#cbd5e1"}`,
+                        background: "transparent",
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ height: 1, background: "#48484a" }} />
             <button
               style={menuItem}
               onClick={() => {
