@@ -84,6 +84,45 @@ export const TeacherCanvas: React.FC<Props> = ({
     inputManagerRef.current.setMode(inputMode);
   }, [inputMode]);
 
+  // Detect S Pen barrel button during HOVER (before tip touches screen).
+  // Chrome Android intercepts barrel+touch as right-click at OS level, so we
+  // pre-switch to eraser while hovering (pressure===0, buttons===2).
+  const onToolChangeRef = useRef(onToolChange);
+  onToolChangeRef.current = onToolChange;
+  const currentToolRef = useRef(currentTool);
+  currentToolRef.current = currentTool;
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onHover = (e: PointerEvent) => {
+      if (e.pointerType !== "pen") return;
+      const barrelHeld = (e.buttons & 2) !== 0;
+      if (barrelHeld && !barrelEraserActive.current) {
+        barrelEraserActive.current = true;
+        onToolChangeRef.current?.("eraser");
+      } else if (!barrelHeld && barrelEraserActive.current && e.pressure === 0) {
+        // Barrel released while still hovering (pen not touching)
+        barrelEraserActive.current = false;
+        onToolChangeRef.current?.("pen");
+      }
+    };
+
+    // Prevent context menu globally while this canvas is mounted — barrel button
+    // triggers contextmenu on Android Chrome before pointer events arrive.
+    const preventCtx = (e: Event) => e.preventDefault();
+
+    el.addEventListener("pointermove", onHover);
+    el.addEventListener("pointerover", onHover);
+    el.addEventListener("contextmenu", preventCtx);
+    return () => {
+      el.removeEventListener("pointermove", onHover);
+      el.removeEventListener("pointerover", onHover);
+      el.removeEventListener("contextmenu", preventCtx);
+    };
+  }, []);
+
   const activeColumnIndex = boardState.columns.findIndex(
     (c) => c.id === boardState.activeColumnId
   );
@@ -297,12 +336,8 @@ export const TeacherCanvas: React.FC<Props> = ({
     activeStrokeRef.current = null;
     strokeErasingRef.current = false;
     inputManagerRef.current.release();
-    // Restore pen if barrel button auto-switched to eraser
-    if (barrelEraserActive.current && onToolChange) {
-      barrelEraserActive.current = false;
-      onToolChange("pen");
-    }
-  }, [onStrokeCommitted, onToolChange]);
+    // Barrel restore is handled by hover listener (pointerover/pointermove at pressure 0)
+  }, [onStrokeCommitted]);
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
