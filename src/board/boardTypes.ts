@@ -76,6 +76,7 @@ export function createDefaultBoardState(): BoardState {
       { id: "col-1", strokes: [] },
       { id: "col-2", strokes: [] },
       { id: "col-3", strokes: [] },
+      { id: "col-4", strokes: [] },
     ],
     activeColumnId: "col-1",
   };
