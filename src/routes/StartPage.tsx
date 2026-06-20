@@ -13,47 +13,81 @@ export const StartPage: React.FC = () => {
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         height: "100vh",
-        background: "#1a1a1a",
+        background:
+          "radial-gradient(120% 120% at 50% 0%, #1b2230 0%, #0d1016 60%, #0a0c10 100%)",
         color: "#eee",
-        fontFamily: "system-ui, sans-serif",
-        gap: "24px",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        padding: "24px",
       }}
     >
-      <h1 style={{ fontSize: "2.5rem", fontWeight: 700, margin: 0 }}>Column Board</h1>
-      <p
+      <div
         style={{
-          color: "#888",
-          fontSize: "1.1rem",
-          margin: 0,
+          width: "100%",
+          maxWidth: 560,
+          background: "#141a24",
+          border: "1px solid #232b38",
+          borderRadius: "20px",
+          padding: "48px 40px 40px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           textAlign: "center",
-          maxWidth: 400,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.45)",
         }}
       >
-        Portrait-first teacher writing pad with 16:9 classroom board rendering.
-      </p>
-      <button
-        onClick={startRoom}
-        style={{
-          padding: "14px 32px",
-          fontSize: "1.1rem",
-          fontFamily: "monospace",
-          background: "#3b82f6",
-          color: "#fff",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          fontWeight: 600,
-        }}
-      >
-        Start New Room
-      </button>
-      <a href="/prototype" style={{ color: "#60a5fa", fontSize: "0.9rem" }}>
-        Open local prototype (no realtime)
-      </a>
+        <div style={{ fontSize: "3.2rem", lineHeight: 1, marginBottom: "20px" }}>
+          📋
+        </div>
+
+        <h1 style={{ fontSize: "2.4rem", fontWeight: 700, margin: 0 }}>
+          Column Board
+        </h1>
+
+        <p
+          style={{
+            color: "#8b95a5",
+            fontSize: "1rem",
+            margin: "14px 0 32px",
+          }}
+        >
+          Portrait writing pad → 16:9 classroom projector
+        </p>
+
+        <button
+          onClick={startRoom}
+          style={{
+            width: "100%",
+            maxWidth: 320,
+            padding: "16px 32px",
+            fontSize: "1.05rem",
+            fontFamily: "system-ui, sans-serif",
+            background: "#3b82f6",
+            color: "#fff",
+            border: "none",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontWeight: 600,
+            boxShadow: "0 6px 20px rgba(59,130,246,0.35)",
+          }}
+        >
+          Create New Room
+        </button>
+
+        <a
+          href="/prototype"
+          style={{
+            marginTop: "22px",
+            color: "#8b95a5",
+            fontSize: "0.9rem",
+            textDecoration: "underline",
+          }}
+        >
+          Local prototype (no realtime)
+        </a>
+      </div>
     </div>
   );
 };
