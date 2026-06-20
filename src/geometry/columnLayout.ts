@@ -17,9 +17,9 @@ export function calculateDisplayColumnLayout(
 ): ColumnLayout {
   const aspect = logicalHeight / logicalWidth; // 1.8
 
-  const horizontalMargin = 20; // CSS px each side
-  const verticalMargin = 20;   // CSS px each side
-  const gap = 16;              // CSS px between columns
+  const horizontalMargin = 0;  // CSS px each side
+  const verticalMargin = 0;    // CSS px each side
+  const gap = 0;               // CSS px between columns (divider line drawn separately)
 
   const availableWidth = boardWidthCss - horizontalMargin * 2 - gap * (columnCount - 1);
   const availableHeight = boardHeightCss - verticalMargin * 2;

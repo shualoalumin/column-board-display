@@ -34,14 +34,15 @@ export const DisplayBoard: React.FC<Props> = ({ boardState, showActiveHighlight 
 
     // Background
     const bgCtx = setupCanvasDpi(bgCanvas);
-    bgCtx.fillStyle = "#1a1a1a";
+    bgCtx.fillStyle = "#1c1c1e";
     bgCtx.fillRect(0, 0, rect.width, rect.height);
 
     columns.forEach((_, i) => {
-      bgCtx.fillStyle = "#ffffff";
+      bgCtx.fillStyle = "#1c1c1e";
       bgCtx.fillRect(layout.columnLeft[i], layout.columnTop[i], layout.columnWidth, layout.columnHeight);
 
-      bgCtx.strokeStyle = "#e8e8e8";
+      // Subtle grid for dark mode
+      bgCtx.strokeStyle = "rgba(255,255,255,0.04)";
       bgCtx.lineWidth = 0.5;
       const step = 40 * layout.scale;
       for (let x = step; x < layout.columnWidth; x += step) {
@@ -54,6 +55,16 @@ export const DisplayBoard: React.FC<Props> = ({ boardState, showActiveHighlight 
         bgCtx.beginPath();
         bgCtx.moveTo(layout.columnLeft[i], layout.columnTop[i] + y);
         bgCtx.lineTo(layout.columnLeft[i] + layout.columnWidth, layout.columnTop[i] + y);
+        bgCtx.stroke();
+      }
+
+      // Column divider line (between columns)
+      if (i > 0) {
+        bgCtx.strokeStyle = "rgba(255,255,255,0.12)";
+        bgCtx.lineWidth = 1;
+        bgCtx.beginPath();
+        bgCtx.moveTo(layout.columnLeft[i], layout.columnTop[i]);
+        bgCtx.lineTo(layout.columnLeft[i], layout.columnTop[i] + layout.columnHeight);
         bgCtx.stroke();
       }
     });
@@ -79,29 +90,15 @@ export const DisplayBoard: React.FC<Props> = ({ boardState, showActiveHighlight 
           const border = document.createElement("div");
           border.style.cssText = `
             position:absolute;
-            left:${layout.columnLeft[activeIdx] - 3}px;
-            top:${layout.columnTop[activeIdx] - 3}px;
-            width:${layout.columnWidth + 6}px;
-            height:${layout.columnHeight + 6}px;
-            border:3px solid #3b82f6;
-            border-radius:4px;
+            left:${layout.columnLeft[activeIdx]}px;
+            top:${layout.columnTop[activeIdx]}px;
+            width:${layout.columnWidth}px;
+            height:${layout.columnHeight}px;
+            box-shadow:inset 0 0 0 3px rgba(59,130,246,0.6);
             pointer-events:none;
             box-sizing:border-box;
           `;
           overlay.appendChild(border);
-
-          const label = document.createElement("div");
-          label.textContent = `Col ${activeIdx + 1}`;
-          label.style.cssText = `
-            position:absolute;
-            left:${layout.columnLeft[activeIdx]}px;
-            top:${layout.columnTop[activeIdx] - 22}px;
-            color:#3b82f6;
-            font-size:12px;
-            font-family:monospace;
-            pointer-events:none;
-          `;
-          overlay.appendChild(label);
         }
       }
     }
@@ -121,7 +118,7 @@ export const DisplayBoard: React.FC<Props> = ({ boardState, showActiveHighlight 
   return (
     <div
       ref={containerRef}
-      style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", background: "#1a1a1a" }}
+      style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", background: "#1c1c1e" }}
     >
       <canvas ref={bgCanvasRef} style={{ position: "absolute", top: 0, left: 0 }} />
       <canvas ref={strokeCanvasRef} style={{ position: "absolute", top: 0, left: 0 }} />

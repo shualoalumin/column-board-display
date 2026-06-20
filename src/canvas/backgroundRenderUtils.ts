@@ -9,11 +9,11 @@ export function drawBackground(
   const w = rect.width;
   const h = rect.height;
 
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#1c1c1e";
   ctx.fillRect(0, 0, w, h);
 
   if (options.showGrid) {
-    ctx.strokeStyle = "#e8e8e8";
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
     ctx.lineWidth = 0.5;
     const step = 40; // CSS px grid step
     for (let x = step; x < w; x += step) {

@@ -3,20 +3,25 @@ import { InputMode } from "../board/boardTypes";
 
 // Classroom-friendly palette. First entry (near-black) is the default ink.
 export const PEN_PALETTE = [
-  "#111111",
-  "#2563eb",
-  "#ef4444",
-  "#0ea5e9",
-  "#22c55e",
+  "#f0f0f0",
+  "#60a5fa",
+  "#f87171",
+  "#34d399",
+  "#fbbf24",
   "#f97316",
-  "#a855f7",
+  "#c084fc",
 ];
+
+export const PEN_WIDTHS = [4, 8, 14, 22] as const;
+export type PenWidth = (typeof PEN_WIDTHS)[number];
 
 interface Props {
   currentTool: "pen" | "eraser";
   onToolChange: (tool: "pen" | "eraser") => void;
   currentColor: string;
   onColorChange: (color: string) => void;
+  currentWidth: number;
+  onWidthChange: (width: number) => void;
   inputMode: InputMode;
   onInputModeChange: (mode: InputMode) => void;
   onUndo: () => void;
@@ -88,6 +93,8 @@ export const Toolbar: React.FC<Props> = ({
   onToolChange,
   currentColor,
   onColorChange,
+  currentWidth,
+  onWidthChange,
   inputMode,
   onInputModeChange,
   onUndo,
@@ -148,6 +155,48 @@ export const Toolbar: React.FC<Props> = ({
                 transition: "all 0.1s",
               }}
             />
+          );
+        })}
+      </div>
+
+      <div style={sep} />
+
+      {/* Pen width presets */}
+      <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 4px" }}>
+        {PEN_WIDTHS.map((w) => {
+          const selected = currentWidth === w;
+          const dotSize = Math.round(4 + w * 0.9);
+          return (
+            <button
+              key={w}
+              onClick={() => {
+                onWidthChange(w);
+                if (currentTool === "eraser") onToolChange("pen");
+              }}
+              aria-label={`Width ${w}`}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "6px",
+                background: selected ? "#334155" : "transparent",
+                border: selected ? "1px solid #60a5fa" : "1px solid #2a3340",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 0,
+                touchAction: "manipulation",
+              }}
+            >
+              <div
+                style={{
+                  width: dotSize,
+                  height: dotSize,
+                  borderRadius: "50%",
+                  background: selected ? "#60a5fa" : "#94a3b8",
+                }}
+              />
+            </button>
           );
         })}
       </div>

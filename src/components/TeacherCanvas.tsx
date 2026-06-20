@@ -36,6 +36,7 @@ interface Props {
   inputMode: InputMode;
   onInputModeChange: (mode: InputMode) => void;
   currentTool: "pen" | "eraser";
+  onToolChange?: (tool: "pen" | "eraser") => void;
   currentColor: string;
   currentWidth: number;
   showDebug?: boolean;
@@ -49,10 +50,13 @@ export const TeacherCanvas: React.FC<Props> = ({
   onStrokeCommitted,
   inputMode,
   currentTool,
+  onToolChange,
   currentColor,
   currentWidth,
   onDebugInfo,
 }) => {
+  // Track if barrel button auto-switched to eraser so we can restore
+  const barrelEraserActive = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const strokeCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -135,13 +139,21 @@ export const TeacherCanvas: React.FC<Props> = ({
 
       canvas.setPointerCapture(e.pointerId);
 
+      // S Pen barrel button: button=5 or buttons & 32
+      const isBarrelButton = e.pointerType === "pen" && (e.button === 5 || (e.buttons & 32) !== 0);
+      if (isBarrelButton && currentTool !== "eraser" && onToolChange) {
+        barrelEraserActive.current = true;
+        onToolChange("eraser");
+      }
+
       const logical = toLogical(e.clientX, e.clientY);
       const point: Point = { x: logical.x, y: logical.y, pressure: e.pressure, timestamp: Date.now() };
 
+      const effectiveTool = isBarrelButton ? "eraser" : currentTool;
       activeStrokeRef.current = {
         id: crypto.randomUUID(),
         columnId: boardState.activeColumnId,
-        tool: currentTool,
+        tool: effectiveTool,
         color: currentColor,
         width: currentWidth,
         points: [point],
@@ -165,7 +177,7 @@ export const TeacherCanvas: React.FC<Props> = ({
         pointCount: 1,
       });
     },
-    [boardState.activeColumnId, currentTool, currentColor, currentWidth, onDebugInfo, toLogical]
+    [boardState.activeColumnId, currentTool, onToolChange, currentColor, currentWidth, onDebugInfo, toLogical]
   );
 
   const onPointerMove = useCallback(
@@ -226,7 +238,12 @@ export const TeacherCanvas: React.FC<Props> = ({
     }
     activeStrokeRef.current = null;
     inputManagerRef.current.release();
-  }, [onStrokeCommitted]);
+    // Restore pen if barrel button auto-switched to eraser
+    if (barrelEraserActive.current && onToolChange) {
+      barrelEraserActive.current = false;
+      onToolChange("pen");
+    }
+  }, [onStrokeCommitted, onToolChange]);
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -260,7 +277,7 @@ export const TeacherCanvas: React.FC<Props> = ({
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        background: "#2a2a2a",
+        background: "#1c1c1e",
         touchAction: "none",
         userSelect: "none",
       }}
