@@ -109,17 +109,27 @@ export const TeacherCanvas: React.FC<Props> = ({
       }
     };
 
-    // Prevent context menu globally while this canvas is mounted — barrel button
-    // triggers contextmenu on Android Chrome before pointer events arrive.
-    const preventCtx = (e: Event) => e.preventDefault();
+    // Fallback: Chrome Android fires contextmenu instead of pointer events for
+    // barrel+touch. Catch it with capture and use as eraser toggle.
+    const onContextMenu = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!barrelEraserActive.current) {
+        barrelEraserActive.current = true;
+        onToolChangeRef.current?.("eraser");
+      } else {
+        barrelEraserActive.current = false;
+        onToolChangeRef.current?.("pen");
+      }
+    };
 
     el.addEventListener("pointermove", onHover);
     el.addEventListener("pointerover", onHover);
-    el.addEventListener("contextmenu", preventCtx);
+    el.addEventListener("contextmenu", onContextMenu, { capture: true });
     return () => {
       el.removeEventListener("pointermove", onHover);
       el.removeEventListener("pointerover", onHover);
-      el.removeEventListener("contextmenu", preventCtx);
+      el.removeEventListener("contextmenu", onContextMenu, { capture: true });
     };
   }, []);
 
