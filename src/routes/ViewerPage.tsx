@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ViewerBoard } from "../components/ViewerBoard";
-import { createDefaultBoardState, BoardState } from "../board/boardTypes";
+import { createDefaultBoardState, BoardState, Stroke } from "../board/boardTypes";
 import { supabaseConfigured } from "../realtime/supabaseClient";
 import { useBoardRealtime } from "../realtime/useBoardRealtime";
 
@@ -9,9 +9,14 @@ export const ViewerPage: React.FC = () => {
   const { roomId = "local" } = useParams<{ roomId: string }>();
   const boardId = `board-${roomId}`;
   const [boardState, setBoardState] = useState<BoardState>(createDefaultBoardState());
+  const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
 
   const onBoardStateChange = useCallback((state: BoardState) => {
     setBoardState(state);
+  }, []);
+
+  const onLiveStroke = useCallback((stroke: Stroke | null) => {
+    setLiveStroke(stroke);
   }, []);
 
   const { connectionStatus } = useBoardRealtime({
@@ -20,6 +25,7 @@ export const ViewerPage: React.FC = () => {
     role: "viewer",
     initialBoardState: boardState,
     onBoardStateChange,
+    onLiveStroke,
   });
 
   const status = supabaseConfigured ? connectionStatus : "disconnected";
@@ -39,7 +45,7 @@ export const ViewerPage: React.FC = () => {
         {!supabaseConfigured && " — Supabase not configured"}
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
-        <ViewerBoard boardState={boardState} />
+        <ViewerBoard boardState={boardState} liveStroke={liveStroke} />
       </div>
     </div>
   );

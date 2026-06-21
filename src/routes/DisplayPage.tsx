@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { DisplayBoard } from "../components/DisplayBoard";
-import { createDefaultBoardState, BoardState } from "../board/boardTypes";
+import { createDefaultBoardState, BoardState, Stroke } from "../board/boardTypes";
 import { supabaseConfigured } from "../realtime/supabaseClient";
 import { useBoardRealtime, ConnectionStatus } from "../realtime/useBoardRealtime";
 
@@ -9,9 +9,14 @@ export const DisplayPage: React.FC = () => {
   const { roomId = "local" } = useParams<{ roomId: string }>();
   const boardId = `board-${roomId}`;
   const [boardState, setBoardState] = useState<BoardState>(createDefaultBoardState());
+  const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
 
   const onBoardStateChange = useCallback((state: BoardState) => {
     setBoardState(state);
+  }, []);
+
+  const onLiveStroke = useCallback((stroke: Stroke | null) => {
+    setLiveStroke(stroke);
   }, []);
 
   const { connectionStatus } = useBoardRealtime({
@@ -20,6 +25,7 @@ export const DisplayPage: React.FC = () => {
     role: "display",
     initialBoardState: boardState,
     onBoardStateChange,
+    onLiveStroke,
   });
 
   const status: ConnectionStatus = supabaseConfigured ? connectionStatus : "disconnected";
@@ -55,7 +61,7 @@ export const DisplayPage: React.FC = () => {
             Waiting for teacher connection…
           </div>
         ) : (
-          <DisplayBoard boardState={boardState} showActiveHighlight />
+          <DisplayBoard boardState={boardState} showActiveHighlight liveStroke={liveStroke} />
         )}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BoardEvent, BoardState, NetworkEventType, UserRole } from "../board/boardTypes";
+import { BoardEvent, BoardState, NetworkEventType, Stroke, UserRole } from "../board/boardTypes";
 import { supabase, supabaseConfigured } from "./supabaseClient";
 import { createBoardEvent, getSenderId, isBoardMutating, saveTeacherStateToLocalStorage } from "./boardEvents";
 import { applyEventToRealtimeState, applyBufferedEvents, RealtimeState } from "./eventReducer";
@@ -12,6 +12,8 @@ interface Options {
   role: UserRole;
   initialBoardState: BoardState;
   onBoardStateChange: (state: BoardState) => void;
+  // Live (in-progress) stroke streaming. null clears the live stroke.
+  onLiveStroke?: (stroke: Stroke | null) => void;
 }
 
 interface RealtimeAPI {
@@ -26,7 +28,10 @@ export function useBoardRealtime({
   role,
   initialBoardState,
   onBoardStateChange,
+  onLiveStroke,
 }: Options): RealtimeAPI {
+  const onLiveStrokeRef = useRef(onLiveStroke);
+  onLiveStrokeRef.current = onLiveStroke;
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
   const seqRef = useRef(0);
   const channelRef = useRef<ReturnType<NonNullable<typeof supabase>["channel"]> | null>(null);
@@ -89,6 +94,21 @@ export function useBoardRealtime({
           timestamp: Date.now(),
         });
         return;
+      }
+
+      // Live stroke progress is ephemeral: never buffered, deduped, or applied
+      // to committed board state. Render it directly on display/viewer.
+      if (event.type === "strokeProgress") {
+        if (role !== "teacher" && event.senderRole === "teacher") {
+          const { stroke } = (event.payload as { stroke: Stroke | null }) ?? { stroke: null };
+          onLiveStrokeRef.current?.(stroke);
+        }
+        return;
+      }
+
+      // A committed stroke supersedes any in-progress live stroke.
+      if (event.type === "strokeCommitted" && role !== "teacher") {
+        onLiveStrokeRef.current?.(null);
       }
 
       // Display/viewer: buffer events before snapshot arrives

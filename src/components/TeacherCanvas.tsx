@@ -46,9 +46,14 @@ interface Props {
   currentEraserWidth: number;
   eraserMode?: EraserMode;
   onStrokesErased?: (columnId: string, strokeIds: string[]) => void;
+  // Live streaming of the in-progress stroke (null clears it).
+  onStrokeProgress?: (stroke: Stroke | null) => void;
   showDebug?: boolean;
   onDebugInfo?: (info: TeacherDebugInfo) => void;
 }
+
+// Throttle interval for broadcasting in-progress strokes (~25/sec).
+const PROGRESS_THROTTLE_MS = 40;
 
 const MIN_LOGICAL_DISTANCE = 2.0;
 
@@ -63,8 +68,10 @@ export const TeacherCanvas: React.FC<Props> = ({
   currentEraserWidth,
   eraserMode = "area",
   onStrokesErased,
+  onStrokeProgress,
   onDebugInfo,
 }) => {
+  const lastProgressSentRef = useRef(0);
   // Track if barrel button auto-switched to eraser so we can restore
   const barrelEraserActive = useRef(false);
   // Stroke-eraser gesture state
@@ -314,6 +321,15 @@ export const TeacherCanvas: React.FC<Props> = ({
         }
       }
 
+      // Stream the in-progress stroke to display/viewer, throttled.
+      if (lastLogical && onStrokeProgress) {
+        const now = Date.now();
+        if (now - lastProgressSentRef.current >= PROGRESS_THROTTLE_MS) {
+          lastProgressSentRef.current = now;
+          onStrokeProgress({ ...stroke, points: stroke.points.slice() });
+        }
+      }
+
       if (lastLogical) {
         const layout = layoutRef.current;
         const canvas = strokeCanvasRef.current;
@@ -335,7 +351,7 @@ export const TeacherCanvas: React.FC<Props> = ({
         });
       }
     },
-    [eraseAt, onDebugInfo, toLogical]
+    [eraseAt, onStrokeProgress, onDebugInfo, toLogical]
   );
 
   const commitStroke = useCallback(() => {
@@ -346,8 +362,10 @@ export const TeacherCanvas: React.FC<Props> = ({
     activeStrokeRef.current = null;
     strokeErasingRef.current = false;
     inputManagerRef.current.release();
+    // Clear the live stroke on display/viewer (the committed stroke replaces it)
+    onStrokeProgress?.(null);
     // Barrel restore is handled by hover listener (pointerover/pointermove at pressure 0)
-  }, [onStrokeCommitted]);
+  }, [onStrokeCommitted, onStrokeProgress]);
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {

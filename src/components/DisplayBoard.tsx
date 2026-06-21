@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import { BoardState } from "../board/boardTypes";
+import { BoardState, Stroke } from "../board/boardTypes";
 import { setupCanvasDpi } from "../canvas/setupCanvasDpi";
 import { renderSingleStroke } from "../canvas/strokeRenderUtils";
 import { calculateDisplayColumnLayout } from "../geometry/columnLayout";
@@ -7,9 +7,11 @@ import { calculateDisplayColumnLayout } from "../geometry/columnLayout";
 interface Props {
   boardState: BoardState;
   showActiveHighlight?: boolean;
+  // In-progress stroke streamed live from the teacher (rendered on top).
+  liveStroke?: Stroke | null;
 }
 
-export const DisplayBoard: React.FC<Props> = ({ boardState, showActiveHighlight = true }) => {
+export const DisplayBoard: React.FC<Props> = ({ boardState, showActiveHighlight = true, liveStroke = null }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const strokeCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -78,6 +80,14 @@ export const DisplayBoard: React.FC<Props> = ({ boardState, showActiveHighlight 
         renderSingleStroke(strokeCtx, stroke, layout.scale, layout.columnLeft[i], layout.columnTop[i]);
       }
     });
+
+    // Live in-progress stroke, rendered on top in its own column.
+    if (liveStroke) {
+      const li = columns.findIndex((c) => c.id === liveStroke.columnId);
+      if (li >= 0) {
+        renderSingleStroke(strokeCtx, liveStroke, layout.scale, layout.columnLeft[li], layout.columnTop[li]);
+      }
+    }
     strokeCtx.globalCompositeOperation = "source-over";
 
     // Overlay: active column border
@@ -102,7 +112,7 @@ export const DisplayBoard: React.FC<Props> = ({ boardState, showActiveHighlight 
         }
       }
     }
-  }, [boardState, showActiveHighlight]);
+  }, [boardState, showActiveHighlight, liveStroke]);
 
   useEffect(() => {
     redraw();

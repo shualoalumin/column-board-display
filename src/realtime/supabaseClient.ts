@@ -7,6 +7,11 @@ export let supabase: SupabaseClient | null = null;
 export let supabaseConfigured = false;
 
 if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    realtime: {
+      // Allow a higher broadcast rate for live stroke streaming
+      params: { eventsPerSecond: 40 },
+    },
+  });
   supabaseConfigured = true;
 }

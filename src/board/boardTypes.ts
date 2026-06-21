@@ -41,6 +41,7 @@ export type BoardAction =
 // Future network event model (not implemented in Phase 0)
 export type NetworkEventType =
   | "strokeCommitted"
+  | "strokeProgress"
   | "eraseStrokes"
   | "undo"
   | "clearActiveColumn"

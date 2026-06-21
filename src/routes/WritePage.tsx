@@ -77,6 +77,13 @@ export const WritePage: React.FC = () => {
     [eraseStrokes, sendEvent]
   );
 
+  const handleStrokeProgress = useCallback(
+    (stroke: Stroke | null) => {
+      sendEvent("strokeProgress", { stroke });
+    },
+    [sendEvent]
+  );
+
   const handleUndo = useCallback(() => { undo(); sendEvent("undo", {}); }, [undo, sendEvent]);
   const handleClearActiveColumn = useCallback(() => { clearActiveColumn(); sendEvent("clearActiveColumn", {}); }, [clearActiveColumn, sendEvent]);
   const handleClearWholeBoard = useCallback(() => { clearWholeBoard(); sendEvent("clearWholeBoard", {}); }, [clearWholeBoard, sendEvent]);
@@ -124,6 +131,7 @@ export const WritePage: React.FC = () => {
           currentEraserWidth={currentEraserWidth}
           eraserMode={eraserMode}
           onStrokesErased={handleStrokesErased}
+          onStrokeProgress={handleStrokeProgress}
         />
       </div>
 
